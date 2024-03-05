@@ -10,8 +10,10 @@
         - Resolver
         - Keybinds
 
-]]
+    Bugs:
+        - None as of 06/5/24 [ March 5th 2024 ]
 
+]]
 
 
 
@@ -24,7 +26,6 @@ local Target = nil
 local TargetKey = "Q"
 local AimlockKey = "C"
 local CamlockKey = "X"
-local SpeedKey = "Z"
 
 local Spinbot = false
 
@@ -183,7 +184,7 @@ local Tabs = {
 }
 
 
-game.RunService.Stepped:Connect(function()
+game.RunService.Heartbeat:Connect(function()
     if Spinbot then
         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(45), 0)
     end
@@ -196,8 +197,6 @@ game.RunService.Stepped:Connect(function()
             end
         end
     end
-end)
-game.RunService.Heartbeat:Connect(function()
     --[[if Target ~= nil and Triggerbot then
         if Target.Character and Target.Character.HumanoidRootPart then
             if Random <= 3 then 
@@ -367,14 +366,14 @@ game:GetService("UserInputService").InputBegan:Connect(function(Key, Typing)
             Notify("New Target", 'Locked on to ['..tostring(Target)..']', 3)
         end
     end
-    if Key.KeyCode == Enum.KeyCode[SpeedKey] then
+    if Key.KeyCode == Enum.KeyCode[Options.SpeedKey.Value] then
         if Speed then
             repeat
                 if game:GetService("UserInputService"):IsKeyDown("W") or game:GetService("UserInputService"):IsKeyDown("A") or game:GetService("UserInputService"):IsKeyDown("S") or game:GetService("UserInputService"):IsKeyDown("D")then
                     game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame + game.Players.LocalPlayer.Character.Humanoid.MoveDirection * SpeedAmount
                 end
                 game:GetService("RunService").Heartbeat:wait()
-            until not game:GetService("UserInputService"):IsKeyDown(SpeedKey)
+            until not game:GetService("UserInputService"):IsKeyDown(Options.SpeedKey.Value)
         end
     end
 end)
@@ -572,7 +571,7 @@ Toggles.ToggleFly:OnChanged(function()
     end
 end)
 Char:AddToggle('ToggleSpinbot', {
-    Text = 'SpinBot',
+    Text = 'Spin Bot',
     Default = Spinbot,
 })
 Toggles.ToggleSpinbot:OnChanged(function()
@@ -627,7 +626,7 @@ Toggles.ToggleSpeed:OnChanged(function()
 end)
 
 Char:AddSlider('SpeedValue', {
-    Text = 'SprintSpeed',
+    Text = 'Sprint Speed',
 
     Default = SpeedAmount,
     Min = 0,
