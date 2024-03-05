@@ -1,13 +1,16 @@
 --[[
 
     to do:
-        silent aim -- working on
-        fake macro -- working on
+        silent aim
+        fake macro
+        speed
 
-        desync -- adding soon
-        resolver -- adding soon
-        target visuals - > hitbox, dot, line, outline, name esp
-        Airshot func -- also adding soon 
+        desync
+        resolver
+        keybinds
+
+
+
 ]]
 
 
@@ -192,13 +195,14 @@ game.RunService.Heartbeat:Connect(function()
     end
     if Target ~= nil then
         local TargetPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
+        local TargetPosition2, onScreeen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position)
         if onScreen then
             Dot.Visible = true
             if CamPrediction or AimPrediction then
                 Dot.Position = Vector2.new(TargetPosition.X, TargetPosition.Y)
                 HitBox.CFrame = CFrame.new(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
             else
-                Dot.Position = Vector2.new(workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position).X, workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position).Y)
+                Dot.Position = Vector2.new(TargetPosition2.X, TargetPosition2.Y)
                 HitBox.CFrame = CFrame.new(Target.Character[AimPart].Position)
             end
         else
@@ -542,7 +546,7 @@ local Old; Old = hookmetamethod(game, "__namecall", function(...)
     
     if Target ~= nil and method == "FireServer" then
         if args[2] == "MousePos" or args[2] == "UpdateMousePos" or args[2] == "Mouse" then 
-            args[3] = Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * Pred)
+            args[3] = Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred)
             return Old(unpack(args))
         end
     end
