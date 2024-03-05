@@ -3,6 +3,7 @@
     To do:
         - Character Visuals
         - Target Visuals
+        - Game Visuals
         - Silent aim
         - Fake macro
 
