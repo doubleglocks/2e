@@ -1,17 +1,16 @@
 --[[
 
-    to do:
-        silent aim
-        fake macro
-        speed
+    To do:
+        - Character Visuals
+        - Target Visuals
+        - Silent aim
+        - Fake macro
 
-        desync
-        resolver
-        keybinds
-
-
+        - Resolver
+        - Keybinds
 
 ]]
+
 
 
 
@@ -26,6 +25,8 @@ local AimlockKey = "C"
 local CamlockKey = "X"
 local SpeedKey = "Z"
 
+local Spinbot = false
+
 local Camlock = false
 local AutoCamPrediction = false
 local CamPrediction = false
@@ -38,6 +39,7 @@ local AimPrediction = false
 local AimPred = 0.148
 local AimPart = "UpperTorso" 
 
+local Desync = false
 local AntiAimKey = "V"
 local AntiAim = false
 local AntiXValue = 0
@@ -52,6 +54,12 @@ local SpeedAmount = 4
 local NoClip = false
 local NoClipKey = "N"
 
+local Flying = false
+local FlyKey = "F"
+local Flyspeed = 4
+
+local AntiStomp = false
+
 local Players = game:GetService("Players")
 local Input = game:GetService("UserInputService")
 local Client = Players.LocalPlayer
@@ -60,6 +68,10 @@ local CurrentCamera = workspace.CurrentCamera
 
 local SilentAim = false
 local SilentAimKey = "P"
+
+local AKnockedCheck = true
+local AGrabbedCheck = true
+--local Triggerbot = false
 
 local Dot = Drawing.new("Circle")
 Dot.Radius = 5
@@ -77,11 +89,25 @@ HitBox.Size = Vector3.new(5.5, 5.5, 5.5)
 HitBox.Transparency = 0.5
 local NotifyLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kinlei/Dynissimo/main/Scripts/AkaliNotif.lua"))()
 
+local function TargetChecks(Player)
+    if AKnockedCheck or CKnockedCheck then
+        if Player.Character.BodyEffects["K.O"].Value then
+            return false
+        end
+    end
+    if AGrabbedCheck or CGrabbedCheck then
+        if Player.Character.BodyEffects["Grabbed"].Value then
+            return false
+        end
+    end
+    return true
+end
+
 local function GetClosestPlayer()
     local closestPlayer = nil
     local shortestDistance = math.huge
     for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-        if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 and v.Character:FindFirstChild("HumanoidRootPart") then
+        if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 and v.Character:FindFirstChild("HumanoidRootPart") and TargetChecks(v) then
             local pos = workspace.CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
             local magnitude = (Vector2.new(pos.X, pos.Y) - Vector2.new(game.Players.LocalPlayer:GetMouse().X, game.Players.LocalPlayer:GetMouse().Y + 36)).magnitude
             if magnitude < shortestDistance then
@@ -101,6 +127,48 @@ local function Notify(title, text, time)
     })
 end
 
+local function fly()
+    local BodyPosition = Instance.new("BodyPosition", game.Players.LocalPlayer.Character:FindFirstChild("Head"))
+    local BodyGyro = Instance.new("BodyGyro", game.Players.LocalPlayer.Character:FindFirstChild("Head"))
+    BodyPosition.maxForce = Vector3.new(math.huge, math.huge, math.huge)
+    BodyPosition.position = game.Players.LocalPlayer.Character:FindFirstChild("Head").Position
+    BodyGyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+    BodyGyro.CFrame = game.Players.LocalPlayer.Character:FindFirstChild("Head").CFrame
+    repeat
+        wait()
+        game.Players.LocalPlayer.Character.Humanoid.PlatformStand = true
+        local New = BodyGyro.CFrame - BodyGyro.CFrame.p + BodyPosition.position
+        if game:GetService("UserInputService"):IsKeyDown("W") then
+            New = New + CurrentCamera.CoordinateFrame.lookVector * Flyspeed
+            BodyGyro.CFrame = CurrentCamera.CoordinateFrame * CFrame.Angles(-math.rad(Flyspeed * 0), 0, 0)
+        end
+        if game:GetService("UserInputService"):IsKeyDown("S") then
+            New = New - CurrentCamera.CoordinateFrame.lookVector * Flyspeed
+            BodyGyro.CFrame = CurrentCamera.CoordinateFrame * CFrame.Angles(math.rad(Flyspeed * 0), 0, 0)
+        end
+        if game:GetService("UserInputService"):IsKeyDown("D") then
+            New = New * CFrame.new(Flyspeed, 0, 0)
+            BodyGyro.CFrame = CurrentCamera.CoordinateFrame
+        end
+        if game:GetService("UserInputService"):IsKeyDown("A") then
+            New = New * CFrame.new(-Flyspeed, 0, 0)
+            BodyGyro.CFrame = CurrentCamera.CoordinateFrame
+        end
+        BodyPosition.Position = New.p
+    until not Flying
+    Flying = not Flying
+    BodyGyro:Destroy()
+    BodyPosition:Destroy()
+    game.Players.LocalPlayer.Character.Humanoid.PlatformStand = false
+end
+
+game.Players.PlayerRemoving:Connect(function(player)
+    if player.Name == tostring(Target) then
+        Target = nil
+        Notify("Target Left", '['..player.Name..'] Has left the server', 3)
+    end
+end)
+
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/doubleglocks/LinoriaLib/main/Library.lua"))()
 Library.KeybindFrame.Visible = true
 
@@ -114,8 +182,40 @@ local Tabs = {
 }
 
 
+game.RunService.Stepped:Connect(function()
+    if Spinbot then
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(45), 0)
+    end
+    if NoClip then
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.HumanoidRootPart then
+            for i, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do 
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                end
+            end
+        end
+    end
+end)
 game.RunService.Heartbeat:Connect(function()
-    if AutoAimPrediction and AimPrediction then
+    --[[if Target ~= nil and Triggerbot then
+        if Target.Character and Target.Character.HumanoidRootPart then
+            if Random <= 3 then 
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character.HumanoidRootPart.CFrame * CFrame.new(math.random(1, 10), 0, math.random(1, 10))
+            elseif Random > 3 then 
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character.HumanoidRootPart.CFrame * CFrame.new(-math.random(1,10), 0, -math.random(1, 10))
+            end
+        end
+    else
+        Random = math.random(1, 6)
+        if Target.Character and Target.Character.HumanoidRootPart then
+            if Random <= 3 then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character.HumanoidRootPart.CFrame * CFrame.new(math.random(1, 5), 0, math.random(1, 5))
+            elseif Random > 3 then 
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character.HumanoidRootPart.CFrame * CFrame.new(-math.random(1, 5), 0, -math.random(1, 5))
+            end
+        end
+    end]]
+    if AutoAimPrediction --[[and AimPrediction]] then
         pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
         split = string.split(pingvalue, " ")
         ping = split[1]
@@ -154,7 +254,7 @@ game.RunService.Heartbeat:Connect(function()
             Options.APrediction:SetValue(AimPred)
         end
     end
-    if AutoCamPrediction and CamPrediction then
+    if AutoCamPrediction --[[and CamPrediction]] then
         pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
         split = string.split(pingvalue, " ")
         ping = split[1]
@@ -193,12 +293,12 @@ game.RunService.Heartbeat:Connect(function()
             Options.CPrediction:SetValue(CamPred)
         end
     end
-    if Target ~= nil then
+    if Target ~= nil and Target.Character and Target.Character.HumanoidRootPart then
         local TargetPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
         local TargetPosition2, onScreeen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position)
-        if onScreen then
+        if onScreen and Target.Character and Target.Character.HumanoidRootPart then
             Dot.Visible = true
-            if CamPrediction or AimPrediction then
+            if CamPrediction or AimPrediction or AutoAimPrediction or AutoCamPrediction then
                 Dot.Position = Vector2.new(TargetPosition.X, TargetPosition.Y)
                 HitBox.CFrame = CFrame.new(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
             else
@@ -213,34 +313,37 @@ game.RunService.Heartbeat:Connect(function()
         Dot.Visible = false
         HitBox.CFrame = CFrame.new(0, -9999, 0)
     end
-    if Target ~= nil and Camlock then
+    if Target ~= nil and Camlock and Target.Character and Target.Character.HumanoidRootPart then
         if CamPrediction then
             CurrentCamera.CFrame = CFrame.new(CurrentCamera.CFrame.Position, Target.Character[CamPart].Position + (Target.Character[CamPart].Velocity * CamPred))
         else
             CurrentCamera.CFrame = CFrame.new(CurrentCamera.CFrame.Position, Target.Character[CamPart].Position)
         end
     end
-    if NoClip then
-        game.RunService.RenderStepped:Wait()
-        for i, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do 
-            if v:IsA("BasePart") then
-                v.CanCollide = false
+    --[[if NoClip then
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.HumanoidRootPart then
+            for i, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do 
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                end
             end
-        end
-    end
+            game.RunService.RenderStepped:Wait()
+        end]]
     if AntiAim then
-        OldVelocity = game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity
-        if AntiAimPre == "Sky" then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 9999, 0)
-        --[[elseif AntiAimPre == "Mouse" then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(game.Players.LocalPlayer:GetMouse().UnitRay.Origin.X, game.Players.LocalPlayer:GetMouse().UnitRay.Origin.Y, game.Players.LocalPlayer:GetMouse().UnitRay.Origin.Z)]]
-        elseif AntiAimPre == "Underground" then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, -9999, 0)
-        elseif AntiAimPre == "Custom Velocity" then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(AntiXValue, AntiYValue, AntiZValue)
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.HumanoidRootPart then
+            OldVelocity = game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity
+            if AntiAimPre == "Sky" then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 9999, 0)
+            --[[elseif AntiAimPre == "Mouse" then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(game.Players.LocalPlayer:GetMouse().UnitRay.Origin.X, game.Players.LocalPlayer:GetMouse().UnitRay.Origin.Y, game.Players.LocalPlayer:GetMouse().UnitRay.Origin.Z)]]
+            elseif AntiAimPre == "Underground" then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, -9999, 0)
+            elseif AntiAimPre == "Custom Velocity" then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(AntiXValue, AntiYValue, AntiZValue)
+            end
+            game.RunService.RenderStepped:Wait()
+            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = OldVelocity
         end
-        game.RunService.RenderStepped:Wait()
-        game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = OldVelocity
     end
 end)
     
@@ -260,6 +363,7 @@ game:GetService("UserInputService").InputBegan:Connect(function(Key, Typing)
             Target = nil
         else
             Target = GetClosestPlayer()
+            Notify("New Target", 'Locked on to ['..tostring(Target)..']', 3)
         end
     end
     if Key.KeyCode == Enum.KeyCode[SpeedKey] then
@@ -269,7 +373,7 @@ game:GetService("UserInputService").InputBegan:Connect(function(Key, Typing)
                     game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame + game.Players.LocalPlayer.Character.Humanoid.MoveDirection * SpeedAmount
                 end
                 game:GetService("RunService").Heartbeat:wait()
-            until not game:GetService("UserInputService"):IsKeyDown("LeftShift")
+            until not game:GetService("UserInputService"):IsKeyDown(SpeedKey)
         end
     end
 end)
@@ -296,6 +400,21 @@ Toggles.ToggleAimlock:OnChanged(function()
     Aimlock = Toggles.ToggleAimlock.Value
 end)
 
+AimTab:AddToggle('ToggleAKnockedCheck', {
+    Text = 'Knocked Check',
+    Default = AKnockedCheck,
+})
+Toggles.ToggleAKnockedCheck:OnChanged(function()
+    AKnockedCheck = Toggles.ToggleAKnockedCheck.Value
+end)
+AimTab:AddToggle('ToggleAGrabbedCheck', {
+    Text = 'Knocked Check',
+    Default = AGrabbedCheck,
+})
+Toggles.ToggleAGrabbedCheck:OnChanged(function()
+    AGrabbedCheck = Toggles.ToggleAGrabbedCheck.Value
+end)
+
 AimTab:AddToggle('ToggleAPrediction', {
     Text = 'Prediction',
     Default = AimPrediction,
@@ -319,6 +438,21 @@ CamTab:AddToggle('ToggleCamlock', {
 })
 Toggles.ToggleCamlock:OnChanged(function()
     Camlock = Toggles.ToggleCamlock.Value
+end)
+
+CamTab:AddToggle('ToggleCKnockedCheck', {
+    Text = 'Knocked Check',
+    Default = CKnockedCheck,
+})
+Toggles.ToggleCKnockedCheck:OnChanged(function()
+    CKnockedCheck = Toggles.ToggleCKnockedCheck.Value
+end)
+CamTab:AddToggle('ToggleCGrabbedCheck', {
+    Text = 'Knocked Check',
+    Default = CGrabbedCheck,
+})
+Toggles.ToggleCGrabbedCheck:OnChanged(function()
+    CGrabbedCheck = Toggles.ToggleCGrabbedCheck.Value
 end)
 
 AimTab:AddToggle('ToggleAutoPred', {
@@ -417,6 +551,46 @@ end)
 
 local CharTab = Tabs.Main:AddLeftTabbox("Character")
 local Char = CharTab:AddTab('Character')
+Char:AddToggle('ToggleFly', {
+    Text = 'Fly',
+    Default = Flying,
+}):AddKeyPicker('FlyKey', {
+
+    Default = FlyKey,
+    SyncToggleState = true, 
+
+    Mode = 'Toggle',
+
+    Text = 'Fly',
+    NoUI = false, 
+})
+Toggles.ToggleFly:OnChanged(function()
+    Flying = Toggles.ToggleFly.Value
+    if Flying then
+        fly()
+    end
+end)
+Char:AddToggle('ToggleSpinbot', {
+    Text = 'SpinBot',
+    Default = Spinbot,
+})
+Toggles.ToggleSpinbot:OnChanged(function()
+    Spinbot = Toggles.ToggleSpinbot.Value
+end)
+Char:AddSlider('Flyspeed', {
+    Text = 'Fly Speed',
+
+    Default = Flyspeed,
+    Min = 1,
+    Max = 15,
+    Rounding = 1,
+
+    Compact = false
+})
+Options.Flyspeed:OnChanged(function()
+    Flyspeed = Options.Flyspeed.Value
+end)
+
 Char:AddToggle('ToggleNoclip', {
     Text = 'NoClip',
     Default = NoClip,
@@ -444,7 +618,7 @@ Char:AddToggle('ToggleSpeed', {
 
     Mode = 'Hold',
 
-    Text = 'Speed',
+    Text = 'Sprint Speed',
     NoUI = false, 
 })
 Toggles.ToggleSpeed:OnChanged(function()
@@ -465,7 +639,15 @@ Options.SpeedValue:OnChanged(function()
     SpeedAmount = Options.SpeedValue.Value
 end)
 
-Char:AddToggle('ToggleAntiAim', {
+local AAT = CharTab:AddTab('Anti-Aim')
+AAT:AddToggle('ToggleDesync', {
+    Text = 'Desync',
+    Default = Desync,
+})
+Toggles.ToggleDesync:OnChanged(function()
+    Desync = Toggles.ToggleDesync.Value
+end)
+AAT:AddToggle('ToggleAntiAim', {
     Text = 'Anti Aim',
     Default = AntiAim,
 }):AddKeyPicker('AntiAimKey', {
@@ -482,7 +664,7 @@ Toggles.ToggleAntiAim:OnChanged(function()
     AntiAim = Toggles.ToggleAntiAim.Value
 end)
 
-Char:AddDropdown('AntiAimPreset', {
+AAT:AddDropdown('AntiAimPreset', {
     Values = {'Sky', 'Shake', --[['Mouse',]] 'Underground', 'Custom Velocity'},
     Default = AntiAimPre,
     Multi = false, 
@@ -494,7 +676,7 @@ Options.AntiAimPreset:OnChanged(function()
     AntiAimPre = Options.AntiAimPreset.Value
 end)
 
-Char:AddSlider('AntiXValue', {
+AAT:AddSlider('AntiXValue', {
     Text = 'X Velocity',
 
     Default = AntiXValue,
@@ -507,7 +689,7 @@ Char:AddSlider('AntiXValue', {
 Options.AntiXValue:OnChanged(function()
     AntiXValue = Options.AntiXValue.Value
 end)
-Char:AddSlider('AntiYValue', {
+AAT:AddSlider('AntiYValue', {
     Text = 'Y Velocity',
 
     Default = AntiYValue,
@@ -520,7 +702,7 @@ Char:AddSlider('AntiYValue', {
 Options.AntiYValue:OnChanged(function()
     AntiYValue = Options.AntiYValue.Value
 end)
-Char:AddSlider('AntiZValue', {
+AAT:AddSlider('AntiZValue', {
     Text = 'Z Velocity',
 
     Default = AntiZValue,
@@ -540,16 +722,18 @@ AimTab:AddButton('Rejoin', function()
 end)
 
 
-local Old; Old = hookmetamethod(game, "__namecall", function(...)
+local Old; Old = hookmetamethod(game, "__namecall", function(self, ...)
     local args = { ... }
     local method = getnamecallmethod()
     
-    if Target ~= nil and method == "FireServer" then
-        if args[2] == "MousePos" or args[2] == "UpdateMousePos" or args[2] == "Mouse" then 
-            args[3] = Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred)
-            return Old(unpack(args))
+    if method == "FireServer" then
+        if args[1] == "MousePos" or args[1] == "UpdateMousePos" or args[1] == "Mouse" then 
+            if Target ~= nil and Aimlock then
+                args[2] = Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred)
+                return Old(self, unpack(args))
+            end
         end
     end
-    
-    return Old(...)
+
+    return Old(self, ...)
 end)
