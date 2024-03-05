@@ -1,15 +1,12 @@
 --[[
 
     to do:
-        silent aim
-        fake macro
-        speed
+        silent aim -- working on
+        fake macro -- working on
 
-        desync
-        resolver
-        keybinds
-
-
+        desync -- adding soon
+        resolver -- adding soon
+        target visuals - > hitbox, dot, line, outline, name esp
 
 ]]
 
@@ -26,20 +23,31 @@ local AimlockKey = "C"
 local CamlockKey = "X"
 local SpeedKey = "Z"
 
-local Aimlock = false
 local Camlock = false
-local Pred = 0.148
-local AimPart = "UpperTorso"
+local AutoCamPrediction = false
+local CamPrediction = false
+local CamPred = 0.148
+local CamPart = "UpperTorso"
+
+local Aimlock = false
+local AutoAimPrediction = false
+local AimPrediction = false
+local AimPred = 0.148
+local AimPart = "UpperTorso" 
 
 local AntiAimKey = "V"
 local AntiAim = false
 local AntiXValue = 0
-local AntiYValue = -9999 
+local AntiYValue = 0 
 local AntiZValue = 0
+local AntiAimPre = "Custom Velocity" --[[ Sky, Ground, Custom, Mouse]]
 
 local Speed = false
 local SpeedKey = "LeftShift"
 local SpeedAmount = 4
+
+local NoClip = false
+local NoClipKey = "N"
 
 local Players = game:GetService("Players")
 local Input = game:GetService("UserInputService")
@@ -47,6 +55,8 @@ local Client = Players.LocalPlayer
 local Mouse = Client:GetMouse()
 local CurrentCamera = workspace.CurrentCamera
 
+local SilentAim = false
+local SilentAimKey = "P"
 
 local Dot = Drawing.new("Circle")
 Dot.Radius = 5
@@ -88,13 +98,109 @@ local function Notify(title, text, time)
     })
 end
 
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/doubleglocks/LinoriaLib/main/Library.lua"))()
+Library.KeybindFrame.Visible = true
+
+local Window = Library:CreateWindow({
+    Title = "streaming",
+    Center = true, 
+    AutoShow = true,
+})
+local Tabs = {
+    Main = Window:AddTab('Combat'), 
+}
+
+
 game.RunService.Heartbeat:Connect(function()
+    if AutoAimPrediction and AimPrediction then
+        pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+        split = string.split(pingvalue, " ")
+        ping = split[1]
+        if tonumber(ping) > 200 and tonumber(ping) < 300 then 
+            AimPred = 0.18742
+            Options.APrediction:SetValue(AimPred)
+        elseif tonumber(ping) > 180 and tonumber(ping) < 195 then 
+            AimPred = 0.16779123
+            Options.APrediction:SetValue(AimPred)
+        elseif tonumber(ping) > 140 and tonumber(ping) < 180 then 
+            AimPred = 0.16
+            Options.APrediction:SetValue(AimPred)
+        elseif tonumber(ping) > 110 and tonumber(ping) < 140 then 
+            AimPred = 0.15934
+            Options.APrediction:SetValue(AimPred)
+        elseif tonumber(ping) < 105 then
+            AimPred = 0.138
+            Options.APrediction:SetValue(AimPred)
+        elseif tonumber(ping) < 90 then
+            AimPred = 0.136
+            Options.APrediction:SetValue(AimPred)
+        elseif tonumber(ping) < 80 then
+            AimPred = 0.134
+            Options.APrediction:SetValue(AimPred)
+        elseif tonumber(ping) < 70 then
+            AimPred = 0.131
+            Options.APrediction:SetValue(AimPred)
+        elseif tonumber(ping) < 60 then
+            AimPred = 0.1229
+            Options.APrediction:SetValue(AimPred)
+        elseif tonumber(ping) < 50 then
+            AimPred = 0.1225
+            Options.APrediction:SetValue(AimPred)
+        elseif tonumber(ping) < 40 then
+            AimPred = 0.1256
+            Options.APrediction:SetValue(AimPred)
+        end
+    end
+    if AutoCamPrediction and CamPrediction then
+        pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+        split = string.split(pingvalue, " ")
+        ping = split[1]
+        if tonumber(ping) > 200 and tonumber(ping) < 300 then 
+            CamPred = 0.18742
+            Options.CPrediction:SetValue(CamPred)
+        elseif tonumber(ping) > 180 and tonumber(ping) < 195 then 
+            CamPred = 0.16779123
+            Options.CPrediction:SetValue(CamPred)
+        elseif tonumber(ping) > 140 and tonumber(ping) < 180 then 
+            CamPred = 0.16
+            Options.CPrediction:SetValue(CamPred)
+        elseif tonumber(ping) > 110 and tonumber(ping) < 140 then 
+            CamPred = 0.15934
+            Options.CPrediction:SetValue(CamPred)
+        elseif tonumber(ping) < 105 then
+            CamPred = 0.138
+            Options.CPrediction:SetValue(CamPred)
+        elseif tonumber(ping) < 90 then
+            CamPred = 0.136
+            Options.CPrediction:SetValue(CamPred)
+        elseif tonumber(ping) < 80 then
+            CamPred = 0.134
+            Options.CPrediction:SetValue(CamPred)
+        elseif tonumber(ping) < 70 then
+            CamPred = 0.131
+            Options.CPrediction:SetValue(CamPred)
+        elseif tonumber(ping) < 60 then
+            CamPred = 0.1229
+            Options.CPrediction:SetValue(CamPred)
+        elseif tonumber(ping) < 50 then
+            CamPred = 0.1225
+            Options.CPrediction:SetValue(CamPred)
+        elseif tonumber(ping) < 40 then
+            CamPred = 0.1256
+            Options.CPrediction:SetValue(CamPred)
+        end
+    end
     if Target ~= nil then
-        local TargetPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * Pred))
+        local TargetPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
         if onScreen then
             Dot.Visible = true
-            Dot.Position = Vector2.new(TargetPosition.X, TargetPosition.Y)
-            HitBox.CFrame = CFrame.new(Target.Character.HumanoidRootPart.Position)
+            if CamPrediction or AimPrediction then
+                Dot.Position = Vector2.new(TargetPosition.X, TargetPosition.Y)
+                HitBox.CFrame = CFrame.new(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
+            else
+                Dot.Position = Vector2.new(workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position).X, workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position).Y)
+                HitBox.CFrame = CFrame.new(Target.Character[AimPart].Position)
+            end
         else
             Dot.Visible = false
             HitBox.CFrame = CFrame.new(0, -9999, 0)
@@ -103,18 +209,37 @@ game.RunService.Heartbeat:Connect(function()
         Dot.Visible = false
         HitBox.CFrame = CFrame.new(0, -9999, 0)
     end
-    if Target ~= nil and Camlock ~= false then
-        CurrentCamera.CFrame = CFrame.new(CurrentCamera.CFrame.Position, Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * Pred))
+    if Target ~= nil and Camlock then
+        if CamPrediction then
+            CurrentCamera.CFrame = CFrame.new(CurrentCamera.CFrame.Position, Target.Character[CamPart].Position + (Target.Character[CamPart].Velocity * CamPred))
+        else
+            CurrentCamera.CFrame = CFrame.new(CurrentCamera.CFrame.Position, Target.Character[CamPart].Position)
+        end
+    end
+    if NoClip then
+        game.RunService.RenderStepped:Wait()
+        for i, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do 
+            if v:IsA("BasePart") then
+                v.CanCollide = false
+            end
+        end
     end
     if AntiAim then
         OldVelocity = game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity
-        game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(AntiXValue, AntiYValue, AntiZValue)
-        game.RunService.Heartbeat:Wait()
+        if AntiAimPre == "Sky" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, 9999, 0)
+        --[[elseif AntiAimPre == "Mouse" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(game.Players.LocalPlayer:GetMouse().UnitRay.Origin.X, game.Players.LocalPlayer:GetMouse().UnitRay.Origin.Y, game.Players.LocalPlayer:GetMouse().UnitRay.Origin.Z)]]
+        elseif AntiAimPre == "Underground" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0, -9999, 0)
+        elseif AntiAimPre == "Custom Velocity" then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(AntiXValue, AntiYValue, AntiZValue)
+        end
+        game.RunService.RenderStepped:Wait()
         game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = OldVelocity
     end
 end)
-        
-
+    
 
 game:GetService("UserInputService").InputBegan:Connect(function(Key, Typing)
     if Typing then return end
@@ -145,22 +270,12 @@ game:GetService("UserInputService").InputBegan:Connect(function(Key, Typing)
     end
 end)
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/doubleglocks/LinoriaLib/main/Library.lua"))()
-Library.KeybindFrame.Visible = true
 
-local Window = Library:CreateWindow({
-    Title = "streaming",
-    Center = true, 
-    AutoShow = true,
-})
-local Tabs = {
-    Main = Window:AddTab('Combat'), 
-}
 
-local CombatTab = Tabs.Main:AddLeftTabbox("Combat")
-local Combat = CombatTab:AddTab('Combat')
-
-Combat:AddToggle('ToggleAimlock', {
+local AimlockTab = Tabs.Main:AddRightTabbox("Aimlock")
+local AimTab = AimlockTab:AddTab('Aimlock')
+local CamTab = AimlockTab:AddTab('Camlock')
+AimTab:AddToggle('ToggleAimlock', {
     Text = 'Aimlock',
     Default = Aimlock,
 }):AddKeyPicker('AimlockKey', {
@@ -177,7 +292,15 @@ Toggles.ToggleAimlock:OnChanged(function()
     Aimlock = Toggles.ToggleAimlock.Value
 end)
 
-Combat:AddToggle('ToggleCamlock', {
+AimTab:AddToggle('ToggleAPrediction', {
+    Text = 'Prediction',
+    Default = AimPrediction,
+})
+Toggles.ToggleAPrediction:OnChanged(function()
+    AimPrediction = Toggles.ToggleAPrediction.Value
+end)
+
+CamTab:AddToggle('ToggleCamlock', {
     Text = 'Camlock',
     Default = Camlock,
 }):AddKeyPicker('CamlockKey', {
@@ -194,10 +317,119 @@ Toggles.ToggleCamlock:OnChanged(function()
     Camlock = Toggles.ToggleCamlock.Value
 end)
 
+AimTab:AddToggle('ToggleAutoPred', {
+    Text = 'Auto Prediction',
+    Default = AutoPrediction,
+})
+Toggles.ToggleAutoPred:OnChanged(function()
+    AutoAimPrediction = Toggles.ToggleAutoPred.Value
+end)
+AimTab:AddSlider('APrediction', {
+    Text = 'Aimlock Prediction',
+
+    Default = AimPred,
+    Min = 0,
+    Max = 1,
+    Rounding = 3,
+
+    Compact = false
+})
+Options.APrediction:OnChanged(function()
+    AimPred = Options.APrediction.Value
+end)
+
+AimTab:AddDropdown('APartSel', {
+    Values = {'Head', 'UpperTorso', 'LowerTorso', 'HumanoidRootPart'},
+    Default = AimPart,
+    Multi = false, 
+
+    Text = 'Aim Part',
+
+})
+Options.APartSel:OnChanged(function()
+    AimPart = Options.APartSel.Value
+end)
+
+
+CamTab:AddToggle('ToggleCPrediction', {
+    Text = 'Prediction',
+    Default = CamPrediction,
+})
+Toggles.ToggleCPrediction:OnChanged(function()
+    CamPrediction = Toggles.ToggleCPrediction.Value
+end)
+CamTab:AddToggle('ToggleCAutoPred', {
+    Text = 'Auto Prediction',
+    Default = AutoCamPrediction,
+})
+Toggles.ToggleCAutoPred:OnChanged(function()
+    AutoCamPrediction = Toggles.ToggleCAutoPred.Value
+end)
+CamTab:AddSlider('CPrediction', {
+    Text = 'Camlock Prediction',
+
+    Default = CamPred,
+    Min = 0,
+    Max = 1,
+    Rounding = 3,
+
+    Compact = false
+})
+Options.CPrediction:OnChanged(function()
+    CamPred = Options.CPrediction.Value
+end)
+
+CamTab:AddDropdown('CPartSel', {
+    Values = {'Head', 'UpperTorso', 'LowerTorso', 'HumanoidRootPart'},
+    Default = CamPart,
+    Multi = false, 
+
+    Text = 'Cam Part',
+
+})
+Options.CPartSel:OnChanged(function()
+    CamPart = Options.CPartSel.Value
+end)
+
+local SilentAimTab = Tabs.Main:AddRightTabbox("Silent Aim")
+local SilentAim = SilentAimTab:AddTab('Silent Aim')
+SilentAim:AddToggle('ToggleSilent', {
+    Text = 'Silent Aim',
+    Default = SilentAim,
+}):AddKeyPicker('SilentAimKey', {
+
+    Default = SilentAimKey,
+    SyncToggleState = true, 
+
+    Mode = 'Toggle',
+
+    Text = 'Silent Aim',
+    NoUI = false, 
+})
+Toggles.ToggleSilent:OnChanged(function()
+    SilentAim = Toggles.ToggleSilent.Value
+end)
 
 
 local CharTab = Tabs.Main:AddLeftTabbox("Character")
-local Char = CombatTab:AddTab('Character')
+local Char = CharTab:AddTab('Character')
+Char:AddToggle('ToggleNoclip', {
+    Text = 'NoClip',
+    Default = NoClip,
+}):AddKeyPicker('NoClipKey', {
+
+    Default = NoClipKey,
+    SyncToggleState = true, 
+
+    Mode = 'Toggle',
+
+    Text = 'NoClip',
+    NoUI = false, 
+})
+Toggles.ToggleNoclip:OnChanged(function()
+    NoClip = Toggles.ToggleNoclip.Value
+end)
+
 Char:AddToggle('ToggleSpeed', {
     Text = 'Speed',
     Default = Speed,
@@ -215,6 +447,20 @@ Toggles.ToggleSpeed:OnChanged(function()
     Speed = Toggles.ToggleSpeed.Value
 end)
 
+Char:AddSlider('SpeedValue', {
+    Text = 'SprintSpeed',
+
+    Default = SpeedAmount,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
+
+    Compact = false
+})
+Options.SpeedValue:OnChanged(function()
+    SpeedAmount = Options.SpeedValue.Value
+end)
+
 Char:AddToggle('ToggleAntiAim', {
     Text = 'Anti Aim',
     Default = AntiAim,
@@ -228,21 +474,29 @@ Char:AddToggle('ToggleAntiAim', {
     Text = 'Anti Aim',
     NoUI = false, 
 })
-Options.AntiAimKey:OnClick(function()
-    AntiAim = Options.AntiAimKey.Value
-end)
-
 Toggles.ToggleAntiAim:OnChanged(function()
     AntiAim = Toggles.ToggleAntiAim.Value
 end)
 
+Char:AddDropdown('AntiAimPreset', {
+    Values = {'Sky', 'Shake', --[['Mouse',]] 'Underground', 'Custom Velocity'},
+    Default = AntiAimPre,
+    Multi = false, 
+
+    Text = 'Anti Aim Preset',
+
+})
+Options.AntiAimPreset:OnChanged(function()
+    AntiAimPre = Options.AntiAimPreset.Value
+end)
+
 Char:AddSlider('AntiXValue', {
-    Text = 'X Value',
+    Text = 'X Velocity',
 
     Default = AntiXValue,
     Min = -9999,
     Max = 9999,
-    Rounding = 2,
+    Rounding = 1,
 
     Compact = false
 })
@@ -250,12 +504,12 @@ Options.AntiXValue:OnChanged(function()
     AntiXValue = Options.AntiXValue.Value
 end)
 Char:AddSlider('AntiYValue', {
-    Text = 'Y Value',
+    Text = 'Y Velocity',
 
     Default = AntiYValue,
     Min = -9999,
     Max = 9999,
-    Rounding = 2,
+    Rounding = 1,
 
     Compact = false
 })
@@ -263,12 +517,12 @@ Options.AntiYValue:OnChanged(function()
     AntiYValue = Options.AntiYValue.Value
 end)
 Char:AddSlider('AntiZValue', {
-    Text = 'Z Value',
+    Text = 'Z Velocity',
 
     Default = AntiZValue,
     Min = -9999,
     Max = 9999,
-    Rounding = 2,
+    Rounding = 1,
 
     Compact = false
 })
@@ -276,35 +530,8 @@ Options.AntiZValue:OnChanged(function()
     AntiZValue = Options.AntiZValue.Value
 end)
 
-Combat:AddSlider('Prediction', {
-    Text = 'Prediction',
 
-    Default = Pred,
-    Min = 0,
-    Max = 1,
-    Rounding = 3,
-
-    Compact = false
-})
-Options.Prediction:OnChanged(function()
-    Pred = Options.Prediction.Value
-end)
-
-
-Combat:AddDropdown('PartSel', {
-    Values = {'Head', 'UpperTorso', 'LowerTorso', 'HumanoidRootPart'},
-    Default = AimPart,
-    Multi = false, 
-
-    Text = 'Aim Part',
-
-})
-Options.PartSel:OnChanged(function()
-    AimPart = Options.PartSel.Value
-end)
-
-
-Combat:AddButton('Rejoin', function()
+AimTab:AddButton('Rejoin', function()
     game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
 end)
 
