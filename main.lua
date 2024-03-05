@@ -7,7 +7,7 @@
         desync -- adding soon
         resolver -- adding soon
         target visuals - > hitbox, dot, line, outline, name esp
-
+        Airshot func -- also adding soon 
 ]]
 
 
