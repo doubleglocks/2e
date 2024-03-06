@@ -98,6 +98,8 @@ local StrafeDistance = 8
 local BodyTrail = false
 local TrailColor = Color3.fromRGB(0, 255, 0)
 
+local LookAt = false
+
 local Dot = Drawing.new("Circle")
 Dot.Radius = 5
 Dot.Filled = true
@@ -348,13 +350,17 @@ spawn(function()
 end)
 
 game.RunService.Heartbeat:Connect(function()
+    --// Look At logic
+    if LookAt and Target and Target.Character and Target.Character.HumanoidRootPart then
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.lookAt(game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.Position, Vector3.new(Target.Character.HumanoidRootPart.Position.X, game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.Position.Y, Target.Character.HumanoidRootPart.Position.Z))  
+    end 
     -- Strafe logic
     if Strafe and Target and Target.Character and Target.Character.HumanoidRootPart then
         StrafeXAngle = StrafeXAngle + StrafeSpeed
         game.workspace.CurrentCamera.CameraSubject = Target.Character
         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character:WaitForChild("HumanoidRootPart").CFrame * CFrame.Angles(0, StrafeXAngle, 0) * CFrame.new(0, 0, StrafeDistance)
     else
-        game.workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character
+        game.workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
     end
     
     -- Targeting logic
@@ -662,6 +668,13 @@ Char:AddSlider('Flyspeed', {
 })
 Options.Flyspeed:OnChanged(function()
     Flyspeed = Options.Flyspeed.Value
+end)
+Char:AddToggle('ToggleLookAt', {
+    Text = 'Look At',
+    Default = LookAt,
+})
+Toggles.ToggleLookAt:OnChanged(function()
+    LookAt = Toggles.ToggleLookAt.Value
 end)
 Char:AddToggle('ToggleSpinbot', {
     Text = 'Spin Bot',
