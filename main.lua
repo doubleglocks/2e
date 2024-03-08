@@ -33,7 +33,6 @@
 
 
 
-
 local Target = nil
 local TargetKey = "Q"
 local AimlockKey = ""
@@ -59,17 +58,17 @@ local AntiAim = false
 local AntiXValue = 0
 local AntiYValue = 0 
 local AntiZValue = 0
-local AntiAimPre = "Custom Velocity" --[[ Sky, Ground, Custom, Mouse]]
+local AntiAimPre = "Custom Velocity" 
 
 local Speed = false
-local SpeedKey = "LeftShift"
+local SpeedKey = "C"
 local SpeedAmount = 4
 
 local NoClip = false
-local NoClipKey = "X"
+local NoClipKey = ""
 
 local Flying = false
-local FlyKey = "F"
+local FlyKey = ""
 local Flyspeed = 4
 
 -- local AntiStomp = true
@@ -96,7 +95,11 @@ local StrafeSpeed = 5
 local StrafeDistance = 8
 
 local BodyTrail = false
-local TrailColor = Color3.fromRGB(0, 255, 0)
+local TrailColor = Color3.fromRGB(162, 125, 200)
+
+local CustomBody = false
+local BodyMaterial = "ForceField"
+local BodyColor = Color3.fromRGB(162, 125, 200)
 
 local LookAt = false
 
@@ -123,7 +126,7 @@ FovCircle.Color = Color3.new(0, 1, 0)
 FovCircle.Radius = 100
 FovCircle.Position = Vector2.new(CurrentCamera.ViewportSize.X / 2, CurrentCamera.ViewportSize.Y / 2)]]
 
-
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/doubleglocks/LinoriaLib/main/Library.lua"))()
 local NotifyLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kinlei/Dynissimo/main/Scripts/AkaliNotif.lua"))()
 
 local function TargetChecks(Player)
@@ -206,8 +209,6 @@ game.Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/doubleglocks/LinoriaLib/main/Library.lua"))()
-
 local Window = Library:CreateWindow({
     Title = "streaming",
     Center = true, 
@@ -258,79 +259,59 @@ spawn(function()
             if ping then
                 if ping > 200 and ping < 300 then 
                     AimPred = 0.18742
-                    Options.APrediction:SetValue(AimPred)
                 elseif ping > 180 and ping < 195 then 
                     AimPred = 0.16779123
-                    Options.APrediction:SetValue(AimPred)
                 elseif ping > 140 and ping < 180 then 
                     AimPred = 0.16
-                    Options.APrediction:SetValue(AimPred)
                 elseif ping > 110 and ping < 140 then 
                     AimPred = 0.15934
-                    Options.APrediction:SetValue(AimPred)
-                elseif ping < 105 then
+                elseif ping < 105 and ping > 90 then
                     AimPred = 0.138
-                    Options.APrediction:SetValue(AimPred)
-                elseif ping < 90 then
+                elseif ping < 90 and ping > 80 then
                     AimPred = 0.136
-                    Options.APrediction:SetValue(AimPred)
-                elseif ping < 80 then
+                elseif ping < 80 and ping > 70 then
                     AimPred = 0.134
-                    Options.APrediction:SetValue(AimPred)
-                elseif ping < 70 then
+                elseif ping < 70 and ping > 60 then
                     AimPred = 0.131
-                    Options.APrediction:SetValue(AimPred)
-                elseif ping < 60 then
+                elseif ping < 60 and ping > 50 then
                     AimPred = 0.1229
-                    Options.APrediction:SetValue(AimPred)
-                elseif ping < 50 then
+                elseif ping < 50 and ping > 40 then
                     AimPred = 0.1225
-                    Options.APrediction:SetValue(AimPred)
                 elseif ping < 40 then
                     AimPred = 0.1256
-                    Options.APrediction:SetValue(AimPred)
                 end
+                Options.APrediction:SetValue(AimPred)
             end
         end
-
+        
         -- AutoCamPrediction logic
         if AutoCamPrediction then
             local ping = tonumber((game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString() or ""):split(" ")[1])
             if ping then
                 if ping > 200 and ping < 300 then 
                     CamPred = 0.18742
-                    Options.CPrediction:SetValue(CamPred)
                 elseif ping > 180 and ping < 195 then 
                     CamPred = 0.16779123
-                    Options.CPrediction:SetValue(CamPred)
                 elseif ping > 140 and ping < 180 then 
                     CamPred = 0.16
-                    Options.CPrediction:SetValue(CamPred)
                 elseif ping > 110 and ping < 140 then 
                     CamPred = 0.15934
-                    Options.CPrediction:SetValue(CamPred)
-                elseif ping < 105 then
+                elseif ping < 105 and ping > 90 then
                     CamPred = 0.138
-                    Options.CPrediction:SetValue(CamPred)
-                elseif ping < 90 then
+                elseif ping < 90 and ping > 80 then
                     CamPred = 0.136
-                    Options.CPrediction:SetValue(CamPred)
-                elseif ping < 80 then
+                elseif ping < 80 and ping > 70 then
                     CamPred = 0.134
-                    Options.CPrediction:SetValue(CamPred)
-                elseif ping < 70 then
+                elseif ping < 70 and ping > 60 then
                     CamPred = 0.131
-                    Options.CPrediction:SetValue(CamPred)
-                elseif ping < 60 then
+                elseif ping < 60 and ping > 50 then
                     CamPred = 0.1229
-                    Options.CPrediction:SetValue(CamPred)
-                elseif ping < 50 then
+                elseif ping < 50 and ping > 40 then
                     CamPred = 0.1225
-                    Options.CPrediction:SetValue(CamPred)
                 elseif ping < 40 then
                     CamPred = 0.1256
-                    Options.CPrediction:SetValue(CamPred)
                 end
+                Options.CPrediction:SetValue(CamPred)
             end
         end
 
@@ -350,6 +331,14 @@ spawn(function()
 end)
 
 game.RunService.Heartbeat:Connect(function()
+    if CustomBody and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+            if v:IsA("MeshPart") then
+                v.Material = BodyMaterial
+                v.Color = BodyColor
+            end
+        end
+    end
     --// Look At logic
     if LookAt and Target and Target.Character and Target.Character.HumanoidRootPart then
         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.lookAt(game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.Position, Vector3.new(Target.Character.HumanoidRootPart.Position.X, game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.Position.Y, Target.Character.HumanoidRootPart.Position.Z))  
@@ -387,7 +376,7 @@ game.RunService.Heartbeat:Connect(function()
 
     -- Camera logic
     if Target ~= nil and Camlock and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") then
-        if CamPrediction then
+        if CamPrediction or AutoCamPrediction then
             CurrentCamera.CFrame = CFrame.new(CurrentCamera.CFrame.Position, Target.Character[CamPart].Position + (Target.Character[CamPart].Velocity * CamPred))
         else
             CurrentCamera.CFrame = CFrame.new(CurrentCamera.CFrame.Position, Target.Character[CamPart].Position)
@@ -852,6 +841,31 @@ ClientT:AddToggle("ShowChat", {
 Toggles.ShowChat:OnChanged(function()
     game.Players.LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Visible = Toggles.ShowChat.Value
 end)
+ClientT:AddToggle('ToggleCustomBody', {
+    Text = 'Custom Body',
+    Default = CustomBody,
+}):AddColorPicker('BodyColor', {
+    Default = BodyColor,
+    Title = 'Body Material Color',
+})
+Options.BodyColor:OnChanged(function()
+    BodyColor = Options.BodyColor.Value
+end)
+Toggles.ToggleCustomBody:OnChanged(function()
+    CustomBody = Toggles.ToggleCustomBody.Value
+end)
+ClientT:AddDropdown('BodyMaterial', {
+    Values = {'Neon', 'Plastic', 'ForceField'},
+    Default = BodyMaterial,
+    Multi = false, 
+
+    Text = 'Body Material',
+
+})
+Options.BodyMaterial:OnChanged(function()
+    BodyMaterial = Options.BodyMaterial.Value
+end)
+
 ClientT:AddToggle('ToggleBodyTrail', {
     Text = 'Body Trail',
     Default = false,
@@ -859,6 +873,9 @@ ClientT:AddToggle('ToggleBodyTrail', {
     Default = TrailColor,
     Title = 'Player Trail Color',
 })
+Options.TrailColor:OnChanged(function()
+    TrailColor = Options.TrailColor.Value
+end)
 Toggles.ToggleBodyTrail:OnChanged(function()
     BodyTrail = Toggles.ToggleBodyTrail.Value
 end)
