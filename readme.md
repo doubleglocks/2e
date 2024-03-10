@@ -10,6 +10,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/doubleglocks/2e/main/
 
 ###
  To do:
+ 
         - Character Visuals
         - Target Visuals
         - Game Visuals
