@@ -8,9 +8,7 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/doubleglocks/2e/main/main.lua"))()
 ```
 
-###
- To do:
- 
+### To do:
         - Character Visuals
         - Target Visuals
         - Game Visuals
