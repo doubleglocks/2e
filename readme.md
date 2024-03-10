@@ -7,3 +7,25 @@
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/doubleglocks/2e/main/main.lua"))()
 ```
+
+###
+ To do:
+        - Character Visuals
+        - Target Visuals
+        - Game Visuals
+        - Silent aim
+        - Fake macro
+        - Anti Stomp
+        - Anti Bag
+        - Target Strafe
+        - Autoshoot/Triggerbot
+
+        - Resolver
+        - Keybinds
+
+        - Client visuals
+        - Bloom
+        - Color Correction
+        - Tint Color
+        - Sky box
+        - Fog color
