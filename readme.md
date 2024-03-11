@@ -16,7 +16,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/doubleglocks/2e/main/
         - Fake macro
         - Anti Stomp
         - Anti Bag
-        - Target Strafe
         - Autoshoot/Triggerbot
 
         - Resolver
