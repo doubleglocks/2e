@@ -58,7 +58,7 @@ local AntiAim = false
 local AntiXValue = 0
 local AntiYValue = 0 
 local AntiZValue = 0
-local AntiAimPre = "Custom Velocity" 
+local AntiAimPre = "Custom Velocity" --[[ Sky, Ground, Custom, Mouse]]
 
 local Speed = false
 local SpeedKey = "C"
@@ -95,6 +95,7 @@ local StrafeSpeed = 5
 local StrafeDistance = 8
 
 local BodyTrail = false
+local TrailMaterial = "Neon"
 local TrailColor = Color3.fromRGB(162, 125, 200)
 
 local CustomBody = false
@@ -102,6 +103,12 @@ local BodyMaterial = "ForceField"
 local BodyColor = Color3.fromRGB(162, 125, 200)
 
 local LookAt = false
+
+local ShowDot = true
+local ShowLine = false
+local ShowName = false
+local ShowCham = false
+local ShowHitBox = true
 
 local Dot = Drawing.new("Circle")
 Dot.Radius = 5
@@ -117,6 +124,12 @@ HitBox.Material = "Neon"
 HitBox.Color = Color3.fromRGB(102, 160, 222)
 HitBox.Size = Vector3.new(5.5, 5.5, 5.5)
 HitBox.Transparency = 0.5
+local Line = Drawing.new("Line")
+Line.Thickness = 2
+Line.Transparency = 1
+Line.Color = Color3.fromRGB(102, 160, 222)
+
+
 --[[local FovCircle = Drawing.new("Circle")
 FovCircle.Visible = true
 FovCircle.Filled = false
@@ -141,6 +154,28 @@ local function TargetChecks(Player)
         end
     end
     return true
+end
+
+local function FindPlayer(Name)
+	for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+        if string.lower(string.sub(p.Name, 1, string.len(Name))) == string.lower(Name) or string.lower(string.sub(p.DisplayName, 1, string.len(Name))) == string.lower(Name) then
+            return p
+        end
+    end
+end
+
+local function TeleportToPlayer(Player)
+    
+    if not (game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and Player and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")) then
+        Notify("Teleport To Player", "Invalid player or missing HumanoidRootPart.", 3)
+        return
+    end
+
+    local teleportTween = game:GetService("TweenService"):Create(game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart"),
+                                              TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+                                              {CFrame = Player.Character:FindFirstChild("HumanoidRootPart").CFrame})
+    teleportTween:Play()
+
 end
 
 local function GetClosestPlayer()
@@ -202,6 +237,8 @@ local function fly()
     game.Players.LocalPlayer.Character.Humanoid.PlatformStand = false
 end
 
+
+
 game.Players.PlayerRemoving:Connect(function(player)
     if player.Name == tostring(Target) then
         Target = nil
@@ -234,13 +271,13 @@ spawn(function()
                     else
                         v.CanCollide = false
                         v.Anchored = true
-                        v.Material = Enum.Material.Neon
+                        v.Material = TrailMaterial
                         v.Color = TrailColor
                     end
                 end
             end
             clone.Parent = game.Workspace
-            wait(0.8)
+            wait(0.6)
             clone:Destroy()
         end
         
@@ -326,19 +363,26 @@ spawn(function()
             end
         end
 
+        if CustomBody and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("MeshPart") then
+                    v.Material = BodyMaterial
+                    --v.Color = BodyColor
+                end
+            end
+        else
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("MeshPart") then
+                    v.Material = "Plastic"
+                end
+            end
+        end
+
         wait()
     end
 end)
 
 game.RunService.Heartbeat:Connect(function()
-    if CustomBody and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-            if v:IsA("MeshPart") then
-                v.Material = BodyMaterial
-                v.Color = BodyColor
-            end
-        end
-    end
     --// Look At logic
     if LookAt and Target and Target.Character and Target.Character.HumanoidRootPart then
         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.lookAt(game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.Position, Vector3.new(Target.Character.HumanoidRootPart.Position.X, game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.Position.Y, Target.Character.HumanoidRootPart.Position.Z))  
@@ -350,28 +394,6 @@ game.RunService.Heartbeat:Connect(function()
         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Target.Character:WaitForChild("HumanoidRootPart").CFrame * CFrame.Angles(0, StrafeXAngle, 0) * CFrame.new(0, 0, StrafeDistance)
     else
         game.workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
-    end
-    
-    -- Targeting logic
-    if Target ~= nil and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") then
-        local TargetPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
-        local TargetPosition2, onScreeen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position)
-        if onScreen and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") then
-            Dot.Visible = true
-            if CamPrediction or AimPrediction or AutoAimPrediction or AutoCamPrediction then
-                Dot.Position = Vector2.new(TargetPosition.X, TargetPosition.Y)
-                HitBox.CFrame = CFrame.new(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
-            else
-                Dot.Position = Vector2.new(TargetPosition2.X, TargetPosition2.Y)
-                HitBox.CFrame = CFrame.new(Target.Character[AimPart].Position)
-            end
-        else
-            Dot.Visible = false
-            HitBox.CFrame = CFrame.new(0, -9999, 0)
-        end
-    else
-        Dot.Visible = false
-        HitBox.CFrame = CFrame.new(0, -9999, 0)
     end
 
     -- Camera logic
@@ -404,6 +426,72 @@ game.RunService.Heartbeat:Connect(function()
         game.RunService.RenderStepped:Wait()
         game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = OldVelocity
     end
+
+    -- Show line Logic
+    if Showline then
+        if Target ~= nil and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") then
+            local TargetPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
+            local TargetPosition2, onScreeen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position)
+            if onScreeen then
+                Line.Visible = true
+                if AutoAimPrediction or AutoCamPrediction or CamPrediction or AimPrediction then
+                    Line.To = Vector2.new(TargetPosition.X, TargetPosition.Y)
+                    Line.From = Vector2.new(game.Players.LocalPlayer:GetMouse().X, game.Players.LocalPlayer:GetMouse().Y + 36)
+                else
+                    Line.To = Vector2.new(TargetPosition2.X, TargetPosition2.Y)
+                end
+            else
+                Line.Visible = false
+            end
+        else
+            Line.Visible = false
+        end
+    end
+
+    -- Show Dot Logic
+    if ShowDot then
+        if Target ~= nil and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") then
+            local TargetPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
+            local TargetPosition2, onScreeen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position)
+            if onScreeen then
+                Dot.Visible = true
+                if AutoAimPrediction or AutoCamPrediction or CamPrediction or AimPrediction then
+                    Dot.Position = Vector2.new(TargetPosition.X, TargetPosition.Y)
+                else
+                    Dot.Position = Vector2.new(TargetPosition2.X, TargetPosition2.Y)
+                end
+            else
+                Dot.Visible = false
+            end
+        else
+            Dot.Visible = false
+        end
+    else
+        Dot.Visible = false
+    end
+
+    -- Show HitBox logic
+    if ShowHitBox then
+        if Target ~= nil and Target.Character and Target.Character:FindFirstChild("HumanoidRootPart") then
+            local TargetPosition, onScreen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
+            local TargetPosition2, onScreeen = workspace.CurrentCamera:WorldToViewportPoint(Target.Character[AimPart].Position)
+            if onScreeen then
+                if AutoAimPrediction or AutoCamPrediction or CamPrediction or AimPrediction then
+                    HitBox.CFrame = CFrame.new(Target.Character[AimPart].Position + (Target.Character[AimPart].Velocity * AimPred))
+                else
+                    HitBox.CFrame = CFrame.new(Target.Character[AimPart].Position)
+                end
+            else
+                HitBox.CFrame = CFrame.new(0, -9999, 0)
+            end
+        else
+            HitBox.CFrame = CFrame.new(0, -9999, 0)
+        end
+    else
+        HitBox.CFrame = CFrame.new(0, -9999, 0)
+    end
+
+    --// Show Chams Logic
 end)
 game:GetService("UserInputService").InputBegan:Connect(function(Key, Typing)
     if Typing then return end
@@ -429,7 +517,7 @@ end)
 
 
 
-local AimlockTab = Tabs.Main:AddRightTabbox("Aimlock")
+local AimlockTab = Tabs.Main:AddRightTabbox()
 local AimTab = AimlockTab:AddTab('Aimlock')
 local CamTab = AimlockTab:AddTab('Camlock')
 AimTab:AddToggle('ToggleAimlock', {
@@ -578,7 +666,7 @@ Options.CPartSel:OnChanged(function()
     CamPart = Options.CPartSel.Value
 end)
 
-local SilentAimTab = Tabs.Main:AddRightTabbox("Silent Aim")
+local SilentAimTab = Tabs.Main:AddRightTabbox()
 local SilentAim = SilentAimTab:AddTab('Silent Aim')
 SilentAim:AddToggle('ToggleSilent', {
     Text = 'Silent Aim',
@@ -622,9 +710,57 @@ SilentAim:AddSlider('SilentAimFOV', {
 
     Compact = false
 })
+local TargetVTab = AimlockTab:AddTab('Visuals')
+TargetVTab:AddToggle('ToggleDot', {
+    Text = 'Show Dot',
+    Default = ShowDot,
+}):AddColorPicker('DotColor', {
+    Default = Dot.Color,
+    Title = 'Dot Color',
+})
+Toggles.ToggleDot:OnChanged(function()
+    ShowDot = Toggles.ToggleDot.Value
+end)
+TargetVTab:AddToggle('ToggleLine', {
+    Text = 'Show Line',
+    Default = ShowLine,
+})
+Toggles.ToggleLine:OnChanged(function()
+    ShowLine = Toggles.ToggleLine.Value
+end)
+TargetVTab:AddToggle('ToggleCham', {
+    Text = 'Show Cham',
+    Default = ShowCham,
+}):AddColorPicker('ChamColor', {
+    Default = HitBox.Color,
+    Title = 'Cham Color',
+})
+Toggles.ToggleCham:OnChanged(function()
+    ShowCham = Toggles.ToggleCham.Value
+end)
+TargetVTab:AddToggle('ToggleName', {
+    Text = 'Show Name',
+    Default = ShowName,
+})
+Toggles.ToggleName:OnChanged(function()
+    ShowName = Toggles.ToggleName.Value
+end)
+TargetVTab:AddToggle('ToggleHitBox', {
+    Text = 'Show HitBox',
+    Default = ShowHitBox,
+}):AddColorPicker('HitBoxColor', {
+    Default = HitBox.Color,
+    Title = 'Hitbox Color',
+})
+Options.HitBoxColor:OnChanged(function()
+    HitBox.Color = Options.HitBoxColor.Value
+end)
+Toggles.ToggleHitBox:OnChanged(function()
+    ShowHitBox = Toggles.ToggleHitBox.Value
+end)
 
 
-local CharTab = Tabs.Main:AddLeftTabbox("Character")
+local CharTab = Tabs.Main:AddLeftTabbox("")
 local Char = CharTab:AddTab('Character')
 Char:AddToggle('ToggleFly', {
     Text = 'Fly',
@@ -832,38 +968,14 @@ Options.AntiZValue:OnChanged(function()
     AntiZValue = Options.AntiZValue.Value
 end)
 
-local ClientTab = Tabs.Main:AddLeftTabbox("Client")
-local ClientT = ClientTab:AddTab('Client')
+
+local ClientT = CharTab:AddTab('Client')
 ClientT:AddToggle("ShowChat", {
     Text = "Show Chat", 
     Default = false
 })
 Toggles.ShowChat:OnChanged(function()
     game.Players.LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Visible = Toggles.ShowChat.Value
-end)
-ClientT:AddToggle('ToggleCustomBody', {
-    Text = 'Custom Body',
-    Default = CustomBody,
-}):AddColorPicker('BodyColor', {
-    Default = BodyColor,
-    Title = 'Body Material Color',
-})
-Options.BodyColor:OnChanged(function()
-    BodyColor = Options.BodyColor.Value
-end)
-Toggles.ToggleCustomBody:OnChanged(function()
-    CustomBody = Toggles.ToggleCustomBody.Value
-end)
-ClientT:AddDropdown('BodyMaterial', {
-    Values = {'Neon', 'Plastic', 'ForceField'},
-    Default = BodyMaterial,
-    Multi = false, 
-
-    Text = 'Body Material',
-
-})
-Options.BodyMaterial:OnChanged(function()
-    BodyMaterial = Options.BodyMaterial.Value
 end)
 
 ClientT:AddToggle('ToggleBodyTrail', {
@@ -879,6 +991,44 @@ end)
 Toggles.ToggleBodyTrail:OnChanged(function()
     BodyTrail = Toggles.ToggleBodyTrail.Value
 end)
+ClientT:AddDropdown('TrailMaterial', {
+    Values = {'Neon', 'ForceField'},
+    Default = TrailMaterial,
+    Multi = false, 
+
+    Text = 'Trail Material',
+
+})
+Options.TrailMaterial:OnChanged(function()
+    TrailMaterial = Options.TrailMaterial.Value
+end)
+
+ClientT:AddToggle('ToggleCustomBody', {
+    Text = 'Customized Body',
+    Default = CustomBody,
+})--[[:AddColorPicker('BodyColor', {
+    Default = BodyColor,
+    Title = 'Body Material Color',
+})
+Options.BodyColor:OnChanged(function()
+    BodyColor = Options.BodyColor.Value
+end)]]
+Toggles.ToggleCustomBody:OnChanged(function()
+    CustomBody = Toggles.ToggleCustomBody.Value
+end)
+
+--[[ClientT:AddDropdown('BodyMaterial', {
+    Values = {'Neon', 'Plastic', 'ForceField'},
+    Default = BodyMaterial,
+    Multi = false, 
+
+    Text = 'Body Material',
+
+})
+Options.BodyMaterial:OnChanged(function()
+    BodyMaterial = Options.BodyMaterial.Value
+end)]]
+
 ClientT:AddToggle("ToggleWatermark", {
     Text = "Show Watermark", 
     Default = false
@@ -901,6 +1051,30 @@ Options.FieldOfView:OnChanged(function()
     game.workspace.CurrentCamera.FieldOfView = Options.FieldOfView.Value
 end)
 
+
+
+local TeleportTab = Tabs.Main:AddRightTabbox()
+local TPTab = TeleportTab:AddTab("Teleport")
+TPTab:AddInput('PlayerTeleport', {
+    Default = '',
+    Numeric = false, 
+    Finished = true, 
+
+    Text = 'Teleport to Player',
+    Tooltip = '', 
+
+    Placeholder = 'Enter Username/Display', 
+
+})
+
+Options.PlayerTeleport:OnChanged(function()
+    TeleportTarget = FindPlayer(Options.PlayerTeleport.Value)
+    if TeleportTarget then
+        TeleportToPlayer(teleportTarget)
+    else
+        Notify("Teleport to Player", "Player not found.", 3)
+    end
+end)
 
 
 
