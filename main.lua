@@ -8,7 +8,6 @@
         - Fake macro
         - Anti Stomp
         - Anti Bag
-        - Target Strafe
         - Autoshoot/Triggerbot
 
         - Resolver
@@ -142,6 +141,14 @@ FovCircle.Position = Vector2.new(CurrentCamera.ViewportSize.X / 2, CurrentCamera
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/doubleglocks/LinoriaLib/main/Library.lua"))()
 local NotifyLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kinlei/Dynissimo/main/Scripts/AkaliNotif.lua"))()
 
+local function Notify(title, text, time)
+    NotifyLibrary.Notify({
+        Title = title;
+        Description = text;
+        Duration = time;
+    })
+end
+
 local function TargetChecks(Player)
     if AKnockedCheck or CKnockedCheck then
         if Player.Character.BodyEffects["K.O"].Value then
@@ -154,28 +161,6 @@ local function TargetChecks(Player)
         end
     end
     return true
-end
-
-local function FindPlayer(Name)
-	for _, p in pairs(game:GetService("Players"):GetPlayers()) do
-        if string.lower(string.sub(p.Name, 1, string.len(Name))) == string.lower(Name) or string.lower(string.sub(p.DisplayName, 1, string.len(Name))) == string.lower(Name) then
-            return p
-        end
-    end
-end
-
-local function TeleportToPlayer(Player)
-    
-    if not (game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and Player and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")) then
-        Notify("Teleport To Player", "Invalid player or missing HumanoidRootPart.", 3)
-        return
-    end
-
-    local teleportTween = game:GetService("TweenService"):Create(game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart"),
-                                              TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
-                                              {CFrame = Player.Character:FindFirstChild("HumanoidRootPart").CFrame})
-    teleportTween:Play()
-
 end
 
 local function GetClosestPlayer()
@@ -194,12 +179,32 @@ local function GetClosestPlayer()
     return closestPlayer
 end
 
-local function Notify(title, text, time)
-    NotifyLibrary.Notify({
-        Title = title;
-        Description = text;
-        Duration = time;
-    })
+local function FindPlayer(Name)
+    local Inserted = {}
+    for _, p in pairs(game:GetService("Players"):GetPlayers()) do 
+        if string.lower(string.sub(p.Name, 1, string.len(Name))) == string.lower(Name) or 
+           (p.DisplayName and string.lower(string.sub(p.DisplayName, 1, string.len(Name))) == string.lower(Name)) then 
+            table.insert(Inserted, p)
+            return p
+        end
+    end
+end
+
+local function Teleport(TeleportTarget)
+    if game.Players.LocalPlayer and game.Players.LocalPlayer.Character then
+        if game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and TeleportTarget then
+            local TweenTeleport = game:GetService("TweenService") :Create(
+                game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart"), 
+                TweenInfo.new(
+                    0 + 1, 
+                    Enum.EasingStyle.Sine, 
+                    Enum.EasingDirection.InOut
+                ), 
+                {CFrame = TeleportTarget}
+            )
+            TweenTeleport:Play()
+        end
+    end
 end
 
 local function fly()
@@ -1052,35 +1057,35 @@ Options.FieldOfView:OnChanged(function()
 end)
 
 
+ClientT:AddButton('Rejoin', function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
+end)
 
-local TeleportTab = Tabs.Main:AddRightTabbox()
-local TPTab = TeleportTab:AddTab("Teleport")
-TPTab:AddInput('PlayerTeleport', {
+
+
+
+local TeleportsTab = Tabs.Main:AddRightTabbox()
+local TPTab = TeleportsTab:AddTab('Teleport')
+TPTab:AddInput('TPToPlayer', {
     Default = '',
     Numeric = false, 
     Finished = true, 
 
     Text = 'Teleport to Player',
-    Tooltip = '', 
+    Tooltip = '',
 
     Placeholder = 'Enter Username/Display', 
-
 })
-
-Options.PlayerTeleport:OnChanged(function()
-    TeleportTarget = FindPlayer(Options.PlayerTeleport.Value)
-    if TeleportTarget then
-        TeleportToPlayer(teleportTarget)
-    else
-        Notify("Teleport to Player", "Player not found.", 3)
+Options.TPToPlayer:OnChanged(function()
+    if Options.TPToPlayer.Value then
+        local TPTarget = FindPlayer(Options.TPToPlayer.Value)
+        if TPTarget and TPTarget.Character then 
+            Teleport(TPTarget.Character:FindFirstChild("HumanoidRootPart").CFrame)
+        end
     end
 end)
 
 
-
-ClientT:AddButton('Rejoin', function()
-    game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
-end)
 
 
 local Old; Old = hookmetamethod(game, "__namecall", function(self, ...)
