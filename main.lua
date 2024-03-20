@@ -1,37 +1,8 @@
---[[
-
-    To do:
-        - Character Visuals
-        - Target Visuals
-        - Game Visuals
-        - Silent aim
-        - Fake macro
-        - Anti Stomp
-        - Anti Bag
-        - Autoshoot/Triggerbot
-
-        - Resolver
-        - Keybinds
-
-        - Client visuals
-        - Bloom
-        - Color Correction
-        - Tint Color
-        - Sky box
-        - Fog color
-        
-
-    Bugs:
-        - None as of 06/5/24 [ March 5th 2024 ]
-
-]]
-
-
-
-
-
-
-
+local Players = game:GetService("Players")
+local Input = game:GetService("UserInputService")
+local Client = Players.LocalPlayer
+local Mouse = Client:GetMouse()
+local CurrentCamera = workspace.CurrentCamera
 local Target = nil
 local TargetKey = "Q"
 local AimlockKey = ""
@@ -41,7 +12,7 @@ local Spinbot = false
 
 local Camlock = false
 local AutoCamPrediction = false
-local CamPrediction = false
+local CamPrediction = false 
 local CamPred = 0.148
 local CamPart = "UpperTorso"
 
@@ -57,7 +28,7 @@ local AntiAim = false
 local AntiXValue = 0
 local AntiYValue = 0 
 local AntiZValue = 0
-local AntiAimPre = "Custom Velocity" --[[ Sky, Ground, Custom, Mouse]]
+local AntiAimPre = "Custom Velocity"
 
 local Speed = false
 local SpeedKey = "C"
@@ -69,14 +40,6 @@ local NoClipKey = ""
 local Flying = false
 local FlyKey = ""
 local Flyspeed = 4
-
--- local AntiStomp = true
-
-local Players = game:GetService("Players")
-local Input = game:GetService("UserInputService")
-local Client = Players.LocalPlayer
-local Mouse = Client:GetMouse()
-local CurrentCamera = workspace.CurrentCamera
 
 local SilentAim = false
 local SAiming = false
@@ -103,11 +66,16 @@ local BodyColor = Color3.fromRGB(162, 125, 200)
 
 local LookAt = false
 
-local ShowDot = true
+local ShowDot = false
 local ShowLine = false
 local ShowName = false
 local ShowCham = false
-local ShowHitBox = true
+local ShowHitBox = false
+
+
+local AutoArmor = false
+local AutoShoot = false
+
 
 local Dot = Drawing.new("Circle")
 Dot.Radius = 5
@@ -128,6 +96,217 @@ Line.Thickness = 2
 Line.Transparency = 1
 Line.Color = Color3.fromRGB(102, 160, 222)
 
+local Stats = Instance.new('ScreenGui', game:GetService("CoreGui"))
+local Frame = Instance.new("Frame", Stats)
+local UIListLayout = Instance.new("UIListLayout", Frame)
+local ClientStatsLabel = Instance.new("Frame", Stats)
+local Index = Instance.new("TextLabel", ClientStatsLabel)
+local Stats_Velocity = Instance.new("Frame", Stats)
+local Index_2 = Instance.new("TextLabel", Stats_Velocity)
+local Value = Instance.new("TextLabel", Stats_Velocity)
+local Stats_RotVelocity = Instance.new("Frame", Stats)
+local Index_3 = Instance.new("TextLabel", Stats_RotVelocity)
+local Value_2 = Instance.new("TextLabel", Stats_RotVelocity)
+local Stats_Rotation = Instance.new("Frame", Stats)
+local Index_4 = Instance.new("TextLabel", Stats_Rotation)
+local Value_3 = Instance.new("TextLabel", Stats_Rotation)
+local Stats_Position = Instance.new("Frame", Stats)
+local Index_5 = Instance.new("TextLabel", Stats_Position)
+local Value_4 = Instance.new("TextLabel", Stats_Position)
+Stats.Enabled = false
+Stats.Name = "Stats"
+Stats.ResetOnSpawn = false
+Stats.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Frame.Parent = Stats
+Frame.AnchorPoint = Vector2.new(1, 0.5)
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BackgroundTransparency = 0.750
+Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(1, -15, 0.417541236, 0)
+Frame.Size = UDim2.new(0, 200, 0, 110)
+
+UIListLayout.Parent = Frame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+ClientStatsLabel.Name = "ClientStatsLabel"
+ClientStatsLabel.Parent = Frame
+ClientStatsLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ClientStatsLabel.BackgroundTransparency = 1.000
+ClientStatsLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+ClientStatsLabel.BorderSizePixel = 0
+ClientStatsLabel.Size = UDim2.new(1, 0, 0, 22)
+
+Index.Name = "Index"
+Index.Parent = ClientStatsLabel
+Index.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Index.BackgroundTransparency = 1.000
+Index.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Index.BorderSizePixel = 0
+Index.Position = UDim2.new(0, 5, 0, 0)
+Index.Size = UDim2.new(1, -10, 1, 0)
+Index.Font = Enum.Font.Arial
+Index.Text = "Server Stats"
+Index.TextColor3 = Color3.fromRGB(255, 255, 255)
+Index.TextSize = 13.000
+Index.TextStrokeTransparency = 0.000
+
+Stats_Velocity.Name = "Stats_Velocity"
+Stats_Velocity.Parent = Frame
+Stats_Velocity.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Stats_Velocity.BackgroundTransparency = 1.000
+Stats_Velocity.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Stats_Velocity.BorderSizePixel = 0
+Stats_Velocity.Size = UDim2.new(1, 0, 0, 22)
+
+Index_2.Name = "Index"
+Index_2.Parent = Stats_Velocity
+Index_2.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Index_2.BackgroundTransparency = 1.000
+Index_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Index_2.BorderSizePixel = 0
+Index_2.Position = UDim2.new(0, 5, 0, 0)
+Index_2.Size = UDim2.new(0.5, -5, 1, 0)
+Index_2.Font = Enum.Font.Arial
+Index_2.Text = "Velocity"
+Index_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+Index_2.TextSize = 13.000
+Index_2.TextStrokeTransparency = 0.000
+Index_2.TextXAlignment = Enum.TextXAlignment.Left
+
+Value.Name = "Value"
+Value.Parent = Stats_Velocity
+Value.AnchorPoint = Vector2.new(1, 0)
+Value.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Value.BackgroundTransparency = 1.000
+Value.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Value.BorderSizePixel = 0
+Value.Position = UDim2.new(1, -5, 0, 0)
+Value.Size = UDim2.new(0.5, -5, 1, 0)
+Value.Font = Enum.Font.Arial
+Value.Text = "0, 0, 0"
+Value.TextColor3 = Color3.fromRGB(255, 255, 255)
+Value.TextSize = 13.000
+Value.TextStrokeTransparency = 0.000
+Value.TextXAlignment = Enum.TextXAlignment.Right
+
+Stats_RotVelocity.Name = "Stats_RotVelocity"
+Stats_RotVelocity.Parent = Frame
+Stats_RotVelocity.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Stats_RotVelocity.BackgroundTransparency = 0.750
+Stats_RotVelocity.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Stats_RotVelocity.BorderSizePixel = 0
+Stats_RotVelocity.Size = UDim2.new(1, 0, 0, 22)
+
+Index_3.Name = "Index"
+Index_3.Parent = Stats_RotVelocity
+Index_3.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Index_3.BackgroundTransparency = 1.000
+Index_3.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Index_3.BorderSizePixel = 0
+Index_3.Position = UDim2.new(0, 5, 0, 0)
+Index_3.Size = UDim2.new(0.5, -5, 1, 0)
+Index_3.Font = Enum.Font.Arial
+Index_3.Text = "RotVelocity"
+Index_3.TextColor3 = Color3.fromRGB(255, 255, 255)
+Index_3.TextSize = 13.000
+Index_3.TextStrokeTransparency = 0.000
+Index_3.TextXAlignment = Enum.TextXAlignment.Left
+
+Value_2.Name = "Value"
+Value_2.Parent = Stats_RotVelocity
+Value_2.AnchorPoint = Vector2.new(1, 0)
+Value_2.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Value_2.BackgroundTransparency = 1.000
+Value_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Value_2.BorderSizePixel = 0
+Value_2.Position = UDim2.new(1, -5, 0, 0)
+Value_2.Size = UDim2.new(0.5, -5, 1, 0)
+Value_2.Font = Enum.Font.Arial
+Value_2.Text = "0, 0, 0"
+Value_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+Value_2.TextSize = 13.000
+Value_2.TextStrokeTransparency = 0.000
+Value_2.TextXAlignment = Enum.TextXAlignment.Right
+
+Stats_Rotation.Name = "Stats_Rotation"
+Stats_Rotation.Parent = Frame
+Stats_Rotation.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Stats_Rotation.BackgroundTransparency = 1.000
+Stats_Rotation.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Stats_Rotation.BorderSizePixel = 0
+Stats_Rotation.Size = UDim2.new(1, 0, 0, 22)
+
+Index_4.Name = "Index"
+Index_4.Parent = Stats_Rotation
+Index_4.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Index_4.BackgroundTransparency = 1.000
+Index_4.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Index_4.BorderSizePixel = 0
+Index_4.Position = UDim2.new(0, 5, 0, 0)
+Index_4.Size = UDim2.new(0.5, -5, 1, 0)
+Index_4.Font = Enum.Font.Arial
+Index_4.Text = "Rotation"
+Index_4.TextColor3 = Color3.fromRGB(255, 255, 255)
+Index_4.TextSize = 13.000
+Index_4.TextStrokeTransparency = 0.000
+Index_4.TextXAlignment = Enum.TextXAlignment.Left
+
+Value_3.Name = "Value"
+Value_3.Parent = Stats_Rotation
+Value_3.AnchorPoint = Vector2.new(1, 0)
+Value_3.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Value_3.BackgroundTransparency = 1.000
+Value_3.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Value_3.BorderSizePixel = 0
+Value_3.Position = UDim2.new(1, -5, 0, 0)
+Value_3.Size = UDim2.new(0.5, -5, 1, 0)
+Value_3.Font = Enum.Font.Arial
+Value_3.Text = "0, 0, 0"
+Value_3.TextColor3 = Color3.fromRGB(255, 255, 255)
+Value_3.TextSize = 13.000
+Value_3.TextStrokeTransparency = 0.000
+Value_3.TextXAlignment = Enum.TextXAlignment.Right
+
+Stats_Position.Name = "Stats_Position"
+Stats_Position.Parent = Frame
+Stats_Position.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Stats_Position.BackgroundTransparency = 0.750
+Stats_Position.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Stats_Position.BorderSizePixel = 0
+Stats_Position.Size = UDim2.new(1, 0, 0, 22)
+
+Index_5.Name = "Index"
+Index_5.Parent = Stats_Position
+Index_5.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Index_5.BackgroundTransparency = 1.000
+Index_5.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Index_5.BorderSizePixel = 0
+Index_5.Position = UDim2.new(0, 5, 0, 0)
+Index_5.Size = UDim2.new(0.5, -5, 1, 0)
+Index_5.Font = Enum.Font.Arial
+Index_5.Text = "Position"
+Index_5.TextColor3 = Color3.fromRGB(255, 255, 255)
+Index_5.TextSize = 13.000
+Index_5.TextStrokeTransparency = 0.000
+Index_5.TextXAlignment = Enum.TextXAlignment.Left
+
+Value_4.Name = "Value"
+Value_4.Parent = Stats_Position
+Value_4.AnchorPoint = Vector2.new(1, 0)
+Value_4.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Value_4.BackgroundTransparency = 1.000
+Value_4.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Value_4.BorderSizePixel = 0
+Value_4.Position = UDim2.new(1, -5, 0, 0)
+Value_4.Size = UDim2.new(0.5, -5, 1, 0)
+Value_4.Font = Enum.Font.Arial
+Value_4.Text = "0, 0, 0"
+Value_4.TextColor3 = Color3.fromRGB(255, 255, 255)
+Value_4.TextSize = 13.000
+Value_4.TextStrokeTransparency = 0.000
+Value_4.TextXAlignment = Enum.TextXAlignment.Right
 
 --[[local FovCircle = Drawing.new("Circle")
 FovCircle.Visible = true
@@ -252,14 +431,14 @@ game.Players.PlayerRemoving:Connect(function(player)
 end)
 
 local Window = Library:CreateWindow({
-    Title = "streaming",
+    Title = "STREAMING.C2EZ | ["..game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name.."]",
     Center = true, 
     AutoShow = true,
 })
 local Tabs = {
     Main = Window:AddTab('Combat'), 
 }
-
+Library:SetWatermark("Streaming.C2EZ | ["..game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name.."]")
 
 spawn(function()
     while true do
@@ -368,6 +547,7 @@ spawn(function()
             end
         end
 
+        -- CustomBody logic
         if CustomBody and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
             for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
                 if v:IsA("MeshPart") then
@@ -381,6 +561,14 @@ spawn(function()
                     v.Material = "Plastic"
                 end
             end
+        end
+
+        -- Stats logic
+        if Stats.Enabled and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            Value.Text = string.format("(%d, %d, %d)", game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity.X, game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity.Y, game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity.Z)
+            Value_2.Text = string.format("(%d, %d, %d)", game.Players.LocalPlayer.Character.HumanoidRootPart.RotVelocity.X, game.Players.LocalPlayer.Character.HumanoidRootPart.RotVelocity.Y, game.Players.LocalPlayer.Character.HumanoidRootPart.RotVelocity.Z)
+            --Value_3.Text = computeRotationalVelocity()
+            Value_4.Text = string.format("(%d, %d, %d)", game.Players.LocalPlayer.Character.HumanoidRootPart.Position.X, game.Players.LocalPlayer.Character.HumanoidRootPart.Position.Y, game.Players.LocalPlayer.Character.HumanoidRootPart.Position.Z)
         end
 
         wait()
@@ -496,7 +684,34 @@ game.RunService.Heartbeat:Connect(function()
         HitBox.CFrame = CFrame.new(0, -9999, 0)
     end
 
-    --// Show Chams Logic
+    --// AntiStomp Logic
+    --[[if AntiStomp and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        if game.Players.LocalPlayer.Character.Humanoid.Health <= 5 and game.Players.LocalPlayer.Character.BodyEffects["K.O"] then
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+                if v:IsA("BasePart") or v:IsA("Part") then
+                    v:Destroy()
+                end
+            end
+        end
+    end]]
+
+    --// Auto Armor / Auto Heal [ Adding heals soon :DDDD ]
+    if AutoArmor and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        if game.Players.LocalPlayer.Character.BodyEffects.Armor.Value <= 50 and workspace.Ignored.Shop["[High Armor] - $3200"] and not game.Players.LocalPlayer.Character.BodyEffects["K.O"].Value then
+            if not OldPos then
+                OldPos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+            end
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = workspace.Ignored.Shop["[High Armor] - $3200"].Head.CFrame
+            fireclickdetector(workspace.Ignored.Shop["[High Armor] - $3200"].ClickDetector)
+        elseif OldPos then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = OldPos
+            OldPos = nil
+        end
+    end
+
+    -- AutoShoot Logic
+            
+
 end)
 game:GetService("UserInputService").InputBegan:Connect(function(Key, Typing)
     if Typing then return end
@@ -550,7 +765,7 @@ Toggles.ToggleAKnockedCheck:OnChanged(function()
     AKnockedCheck = Toggles.ToggleAKnockedCheck.Value
 end)
 AimTab:AddToggle('ToggleAGrabbedCheck', {
-    Text = 'Knocked Check',
+    Text = 'Grabbed Check',
     Default = AGrabbedCheck,
 })
 Toggles.ToggleAGrabbedCheck:OnChanged(function()
@@ -590,7 +805,7 @@ Toggles.ToggleCKnockedCheck:OnChanged(function()
     CKnockedCheck = Toggles.ToggleCKnockedCheck.Value
 end)
 CamTab:AddToggle('ToggleCGrabbedCheck', {
-    Text = 'Knocked Check',
+    Text = 'Grabbed Check',
     Default = CGrabbedCheck,
 })
 Toggles.ToggleCGrabbedCheck:OnChanged(function()
@@ -666,7 +881,7 @@ CamTab:AddDropdown('CPartSel', {
 
     Text = 'Cam Part',
 
-})
+})  
 Options.CPartSel:OnChanged(function()
     CamPart = Options.CPartSel.Value
 end)
@@ -975,14 +1190,13 @@ end)
 
 
 local ClientT = CharTab:AddTab('Client')
-ClientT:AddToggle("ShowChat", {
-    Text = "Show Chat", 
-    Default = false
+ClientT:AddToggle('ToggleAutoArmor', {
+    Text = 'Auto Armor',
+    Default = false,
 })
-Toggles.ShowChat:OnChanged(function()
-    game.Players.LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Visible = Toggles.ShowChat.Value
+Toggles.ToggleAutoArmor:OnChanged(function()
+    AutoArmor = Toggles.ToggleAutoArmor.Value
 end)
-
 ClientT:AddToggle('ToggleBodyTrail', {
     Text = 'Body Trail',
     Default = false,
@@ -1034,18 +1248,46 @@ Options.BodyMaterial:OnChanged(function()
     BodyMaterial = Options.BodyMaterial.Value
 end)]]
 
-ClientT:AddToggle("ToggleWatermark", {
-    Text = "Show Watermark", 
+
+
+
+
+
+
+local MiscTab = Tabs.Main:AddLeftTabbox()
+local MiscT = MiscTab:AddTab('Misc')
+MiscT:AddButton('Rejoin', function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
+end)
+MiscT:AddToggle("ShowChat", {
+    Text = "Chat", 
     Default = false
 })
-ClientT:AddToggle("ToggleBindsMenu", {
-    Text = "Show Keybinds Menu", 
+Toggles.ShowChat:OnChanged(function()
+    game.Players.LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Visible = Toggles.ShowChat.Value
+end)
+MiscT:AddToggle("ToggleWatermark", {
+    Text = "Watermark", 
     Default = false
 })
+MiscT:AddToggle("ToggleBindsMenu", {
+    Text = "Keybinds Menu", 
+    Default = false
+})
+MiscT:AddToggle("ToggleClientStats", {
+    Text = "Client Stats Menu", 
+    Default = false
+})
+Toggles.ToggleWatermark:OnChanged(function()
+    Library:SetWatermarkVisibility(Toggles.ToggleWatermark.Value)
+end)
+Toggles.ToggleClientStats:OnChanged(function()
+    Stats.Enabled = Toggles.ToggleClientStats.Value
+end)
 Toggles.ToggleBindsMenu:OnChanged(function()
     Library.KeybindFrame.Visible = Toggles.ToggleBindsMenu.Value
 end)
-ClientT:AddSlider("FieldOfView", {
+MiscT:AddSlider("FieldOfView", {
     Text = "Field Of View", 
     Default = 70, 
     Min = 70, 
@@ -1055,13 +1297,6 @@ ClientT:AddSlider("FieldOfView", {
 Options.FieldOfView:OnChanged(function()
     game.workspace.CurrentCamera.FieldOfView = Options.FieldOfView.Value
 end)
-
-
-ClientT:AddButton('Rejoin', function()
-    game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
-end)
-
-
 
 
 local TeleportsTab = Tabs.Main:AddRightTabbox()
@@ -1077,15 +1312,13 @@ TPTab:AddInput('TPToPlayer', {
     Placeholder = 'Enter Username/Display', 
 })
 Options.TPToPlayer:OnChanged(function()
-    if Options.TPToPlayer.Value then
+    if Options.TPToPlayer.Value ~= "" then
         local TPTarget = FindPlayer(Options.TPToPlayer.Value)
         if TPTarget and TPTarget.Character then 
             Teleport(TPTarget.Character:FindFirstChild("HumanoidRootPart").CFrame)
         end
     end
 end)
-
-
 
 
 local Old; Old = hookmetamethod(game, "__namecall", function(self, ...)
