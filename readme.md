@@ -27,3 +27,5 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/doubleglocks/2e/main/
         - Tint Color
         - Sky box
         - Fog color
+
+        - Blacklist
